@@ -5,8 +5,17 @@ import sys
 import logging
 from typing import Any, List, Optional, Union, Tuple, Dict
 from enum import Enum
+import os
+import shutil
 
-from gerber2ems.constants import CONFIG_FORMAT_VERSION, UNIT
+from gerber2ems.constants import(
+    CONFIG_FORMAT_VERSION, 
+    UNIT, 
+    BASE_DIR, 
+    SIMULATION_DIR,
+    GEOMETRY_DIR,
+    RESULTS_DIR,
+) 
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +214,15 @@ class Config:
 
         self.arguments = args
 
+        # Create the working directories
+        self.base_dir = os.path.join(os.getcwd(), BASE_DIR)
+        self.geometry_dir = os.path.join(os.getcwd(), GEOMETRY_DIR)
+        self.results_dir = os.path.join(os.getcwd(), RESULTS_DIR)
+        self.simulation_dir = os.path.join(os.getcwd(), SIMULATION_DIR)
+
+        # Assign the fab directory
+        self.fab_dir = os.path.join(os.getcwd(), "fab")
+
         ports = get(json, ["ports"], list)
         self.ports: List[PortConfig] = []
         for port in ports:
@@ -227,6 +245,18 @@ class Config:
 
         self.__class__._instance = self
 
+    def create_default_directories(self) -> None:
+        # Create the working directories. 
+        # Create from constants to keep track of not removing any
+        # important files. 
+        self.base_dir = self.create_dir(path = BASE_DIR, cleanup = False)
+        if self.arguments.geometry or self.arguments.all:
+            self.geometry_dir = self.create_dir(path = GEOMETRY_DIR, cleanup = True)
+        if self.arguments.postprocess or self.arguments.all:
+            self.results_dir = self.create_dir(path = RESULTS_DIR, cleanup = True)
+        if self.arguments.simulate or self.arguments.all:
+            self.simulation_dir = self.create_dir(path = SIMULATION_DIR, cleanup = True)
+
     def load_stackup(self, stackup) -> None:
         """Load stackup from json object."""
         layers = []
@@ -246,3 +276,12 @@ class Config:
     def get_metals(self) -> List[LayerConfig]:
         """Return metals layers configs."""
         return list(filter(lambda layer: layer.kind == LayerKind.METAL, self.layers))
+
+    def create_dir(self, path: str, cleanup: bool = False):
+        """Create a directory if doesn't exist."""
+        directory_path = os.path.join(os.getcwd(), path)
+        if cleanup and os.path.exists(directory_path):
+            shutil.rmtree(directory_path)
+        if not os.path.exists(directory_path):
+            os.mkdir(directory_path)
+        return directory_path
