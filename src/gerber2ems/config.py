@@ -5,8 +5,17 @@ import sys
 import logging
 from typing import Any, List, Optional, Union, Tuple, Dict
 from enum import Enum
+import os
+import shutil
 
-from gerber2ems.constants import CONFIG_FORMAT_VERSION, UNIT
+from gerber2ems.constants import(
+    CONFIG_FORMAT_VERSION, 
+    UNIT, 
+    BASE_DIR, 
+    SIMULATION_DIR,
+    GEOMETRY_DIR,
+    RESULTS_DIR,
+) 
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +214,18 @@ class Config:
 
         self.arguments = args
 
+        # Create the working directories
+        self.base_dir = self.create_dir(path = BASE_DIR, cleanup = False)
+        if args.geometry or args.all:
+            self.geometry_dir = self.create_dir(path = GEOMETRY_DIR, cleanup = True)
+        if args.postprocess or args.all:
+            self.results_dir = self.create_dir(path = RESULTS_DIR, cleanup = True)
+        if args.simulate or args.all:
+            self.simulation_dir = self.create_dir(path = SIMULATION_DIR, cleanup = True)
+
+        # Assign the dab directory
+        self.fab_dir = os.path.join(os.getcwd(), "fab")
+
         ports = get(json, ["ports"], list)
         self.ports: List[PortConfig] = []
         for port in ports:
@@ -246,3 +267,12 @@ class Config:
     def get_metals(self) -> List[LayerConfig]:
         """Return metals layers configs."""
         return list(filter(lambda layer: layer.kind == LayerKind.METAL, self.layers))
+
+    def create_dir(self, path: str, cleanup: bool = False):
+        """Create a directory if doesn't exist."""
+        directory_path = os.path.join(os.getcwd(), path)
+        if cleanup and os.path.exists(directory_path):
+            shutil.rmtree(directory_path)
+        if not os.path.exists(directory_path):
+            os.mkdir(directory_path)
+        return directory_path

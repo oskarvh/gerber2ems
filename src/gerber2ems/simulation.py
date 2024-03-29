@@ -13,8 +13,6 @@ import numpy as np
 from gerber2ems.config import Config, PortConfig, LayerKind
 from gerber2ems.constants import (
     UNIT,
-    SIMULATION_DIR,
-    GEOMETRY_DIR,
     VIA_POLYGON,
 )
 import gerber2ems.importer as importer
@@ -414,15 +412,15 @@ class Simulation:
         logger.info("Starting simulation")
         cwd = os.getcwd()
         if threads is not None:
-            self.fdtd.Run(os.path.join(os.getcwd(), SIMULATION_DIR, str(excited_port_number)), numThreads=threads)
+            self.fdtd.Run(os.path.join(Config.get().simulation_dir, str(excited_port_number)), numThreads=threads)
         else:
-            self.fdtd.Run(os.path.join(os.getcwd(), SIMULATION_DIR, str(excited_port_number)))
+            self.fdtd.Run(os.path.join(Config.get().simulation_dir, str(excited_port_number)))
 
         os.chdir(cwd)
 
     def save_geometry(self) -> None:
         """Save geometry to file."""
-        filename = os.path.join(os.getcwd(), GEOMETRY_DIR, "geometry.xml")
+        filename = os.path.join(Config.get().geometry_dir, "geometry.xml")
         logger.info("Saving geometry to %s", filename)
         self.csx.Write2XML(filename)
 
@@ -436,7 +434,7 @@ class Simulation:
 
     def load_geometry(self) -> None:
         """Load geometry from file."""
-        filename = os.path.join(os.getcwd(), GEOMETRY_DIR, "geometry.xml")
+        filename = os.path.join(Config.get().geometry_dir, "geometry.xml")
         logger.info("Loading geometry from %s", filename)
         if not os.path.exists(filename):
             logger.error("Geometry file does not exist. Did you run geometry step?")
@@ -445,7 +443,7 @@ class Simulation:
 
     def get_port_parameters(self, index: int, frequencies) -> Tuple[List, List]:
         """Return reflected and incident power vs frequency for each port."""
-        result_path = os.path.join(os.getcwd(), SIMULATION_DIR, str(index))
+        result_path = os.path.join(Config.get().simulation_dir, str(index))
 
         incident: List[np.ndarray] = []
         reflected: List[np.ndarray] = []

@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 
 from gerber2ems.config import Config
 from gerber2ems.constants import (
-    GEOMETRY_DIR,
     UNIT,
     PIXEL_SIZE,
     BORDER_THICKNESS,
@@ -51,7 +50,7 @@ def process_gbrs_to_pngs():
         gbr_to_png(
             os.path.join(os.getcwd(), "fab", name),
             os.path.join(os.getcwd(), "fab", edge),
-            os.path.join(os.getcwd(), GEOMETRY_DIR, output),
+            os.path.join(Config.get().geometry_dir, output),
         )
 
 
@@ -92,7 +91,7 @@ def get_dimensions(input_filename: str) -> Tuple[int, int]:
     Opens PNG found in `ems/geometry` directory,
     gets it's size and subtracts border thickness to get board dimensions
     """
-    path = os.path.join(GEOMETRY_DIR, input_filename)
+    path = os.path.join(Config.get().geometry_dir, input_filename)
     image = PIL.Image.open(path)
     image_width, image_height = image.size
     height = image_height * PIXEL_SIZE - BORDER_THICKNESS
@@ -109,7 +108,7 @@ def get_triangles(input_filename: str) -> np.ndarray:
     and then uses Nanomesh to create a triangular mesh of the copper.
     Returns a list of triangles, where each triangle consists of coordinates for each vertex.
     """
-    path = os.path.join(GEOMETRY_DIR, input_filename)
+    path = os.path.join(Config.get().geometry_dir, input_filename)
     image = PIL.Image.open(path)
     gray = image.convert("L")
     thresh = gray.point(lambda p: 255 if p < 230 else 0)
@@ -123,7 +122,7 @@ def get_triangles(input_filename: str) -> np.ndarray:
     mesh = mesher.triangulate(opts="a100000")
 
     if Config.get().arguments.debug:
-        filename = os.path.join(os.getcwd(), GEOMETRY_DIR, input_filename + "_mesh.png")
+        filename = os.path.join(Config.get().geometry_dir, input_filename + "_mesh.png")
         logger.debug("Saving mesh to file: %s", filename)
         mesh.plot_mpl()
         plt.savefig(filename, dpi=300)

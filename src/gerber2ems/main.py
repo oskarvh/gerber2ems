@@ -7,12 +7,10 @@ import json
 import argparse
 import logging
 from typing import Any, Optional
-import shutil
 
 import coloredlogs
 import numpy as np
 
-from gerber2ems.constants import BASE_DIR, SIMULATION_DIR, GEOMETRY_DIR, RESULTS_DIR
 from gerber2ems.simulation import Simulation
 from gerber2ems.postprocess import Postprocesor
 from gerber2ems.config import Config
@@ -39,20 +37,16 @@ def main():
 
     config = open_config(args)
     config = Config(config, args)
-    create_dir(BASE_DIR)
 
     if args.geometry or args.all:
         logger.info("Creating geometry")
-        create_dir(GEOMETRY_DIR, cleanup=True)
         sim = Simulation()
         geometry(sim)
     if args.simulate or args.all:
         logger.info("Running simulation")
-        create_dir(SIMULATION_DIR, cleanup=True)
         simulate(threads=args.threads)
     if args.postprocess or args.all:
         logger.info("Postprocessing")
-        create_dir(RESULTS_DIR, cleanup=True)
         sim = Simulation()
         postprocess(sim)
 
@@ -244,14 +238,6 @@ def open_config(args: Any) -> None:
 
     return config
 
-
-def create_dir(path: str, cleanup: bool = False) -> None:
-    """Create a directory if doesn't exist."""
-    directory_path = os.path.join(os.getcwd(), path)
-    if cleanup and os.path.exists(directory_path):
-        shutil.rmtree(directory_path)
-    if not os.path.exists(directory_path):
-        os.mkdir(directory_path)
 
 
 if __name__ == "__main__":
