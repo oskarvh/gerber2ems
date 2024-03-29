@@ -37,6 +37,7 @@ def main():
 
     config = open_config(args)
     config = Config(config, args)
+    config.create_default_directories()
 
     if args.geometry or args.all:
         logger.info("Creating geometry")

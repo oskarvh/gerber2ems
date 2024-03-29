@@ -215,15 +215,12 @@ class Config:
         self.arguments = args
 
         # Create the working directories
-        self.base_dir = self.create_dir(path = BASE_DIR, cleanup = False)
-        if args.geometry or args.all:
-            self.geometry_dir = self.create_dir(path = GEOMETRY_DIR, cleanup = True)
-        if args.postprocess or args.all:
-            self.results_dir = self.create_dir(path = RESULTS_DIR, cleanup = True)
-        if args.simulate or args.all:
-            self.simulation_dir = self.create_dir(path = SIMULATION_DIR, cleanup = True)
+        self.base_dir = os.path.join(os.getcwd(), BASE_DIR)
+        self.geometry_dir = os.path.join(os.getcwd(), GEOMETRY_DIR)
+        self.results_dir = os.path.join(os.getcwd(), RESULTS_DIR)
+        self.simulation_dir = os.path.join(os.getcwd(), SIMULATION_DIR)
 
-        # Assign the dab directory
+        # Assign the fab directory
         self.fab_dir = os.path.join(os.getcwd(), "fab")
 
         ports = get(json, ["ports"], list)
@@ -247,6 +244,18 @@ class Config:
         self.layers: List[LayerConfig] = []
 
         self.__class__._instance = self
+
+    def create_default_directories(self) -> None:
+        # Create the working directories. 
+        # Create from constants to keep track of not removing any
+        # important files. 
+        self.base_dir = self.create_dir(path = BASE_DIR, cleanup = False)
+        if self.arguments.geometry or self.arguments.all:
+            self.geometry_dir = self.create_dir(path = GEOMETRY_DIR, cleanup = True)
+        if self.arguments.postprocess or self.arguments.all:
+            self.results_dir = self.create_dir(path = RESULTS_DIR, cleanup = True)
+        if self.arguments.simulate or self.arguments.all:
+            self.simulation_dir = self.create_dir(path = SIMULATION_DIR, cleanup = True)
 
     def load_stackup(self, stackup) -> None:
         """Load stackup from json object."""

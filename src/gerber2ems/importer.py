@@ -34,7 +34,7 @@ def process_gbrs_to_pngs():
     """
     logger.info("Processing gerber files")
 
-    files = os.listdir(os.path.join(os.getcwd(), "fab"))
+    files = os.listdir(os.path.join(Config.get().fab_dir))
 
     edge = next(filter(lambda name: "Edge_Cuts.gbr" in name, files), None)
     if edge is None:
@@ -48,8 +48,8 @@ def process_gbrs_to_pngs():
     for name in layers:
         output = name.split("-")[-1].split(".")[0] + ".png"
         gbr_to_png(
-            os.path.join(os.getcwd(), "fab", name),
-            os.path.join(os.getcwd(), "fab", edge),
+            os.path.join(Config.get().fab_dir, name),
+            os.path.join(Config.get().fab_dir, edge),
             os.path.join(Config.get().geometry_dir, output),
         )
 
@@ -158,7 +158,7 @@ def get_vias() -> List[List[float]]:
     Looks for excellon file in `fab` directory. Its filename should end with `-PTH.drl`
     It then processes it to find all vias.
     """
-    files = os.listdir(os.path.join(os.getcwd(), "fab"))
+    files = os.listdir(os.path.join(Config.get().fab_dir))
     drill_filename = next(filter(lambda name: "-PTH.drl" in name, files), None)
     if drill_filename is None:
         logger.error("Couldn't find drill file")
@@ -167,7 +167,7 @@ def get_vias() -> List[List[float]]:
     drills = {0: 0.0}  # Drills are numbered from 1. 0 is added as a "no drill" option
     current_drill = 0
     vias: List[List[float]] = []
-    with open(os.path.join(os.getcwd(), "fab", drill_filename), "r", encoding="utf-8") as drill_file:
+    with open(os.path.join(Config.get().fab_dir, drill_filename), "r", encoding="utf-8") as drill_file:
         for line in drill_file.readlines():
             # Regex for finding drill sizes (in mm)
             match = re.fullmatch("T([0-9]+)C([0-9]+.[0-9]+)\\n", line)
@@ -201,7 +201,7 @@ def get_vias() -> List[List[float]]:
 
 def import_stackup():
     """Import stackup information from `fab/stackup.json` file and load it into config object."""
-    filename = "fab/stackup.json"
+    filename = Config.get().fab_dir + "/stackup.json"
     with open(filename, "r", encoding="utf-8") as file:
         try:
             stackup = json.load(file)
@@ -236,9 +236,9 @@ def import_port_positions() -> None:
     Parses them to find port footprints and inserts their position information to config object.
     """
     ports: List[Tuple[int, Tuple[float, float], float]] = []
-    for filename in os.listdir(os.path.join(os.getcwd(), "fab")):
+    for filename in os.listdir(os.path.join(Config.get().fab_dir)):
         if filename.endswith("-pos.csv"):
-            ports += get_ports_from_file(os.path.join(os.getcwd(), "fab", filename))
+            ports += get_ports_from_file(os.path.join(Config.get().fab_dir, filename))
 
     for number, position, direction in ports:
         if len(Config.get().ports) > number:
