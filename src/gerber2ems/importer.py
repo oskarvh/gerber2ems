@@ -267,8 +267,6 @@ def get_ports_from_file(filename: str) -> List[Tuple[int, Tuple[float, float], f
             logger.error(f"Unexpected fields in the position csv file. Expected {expected_fields}, got {reader.fieldnames}") 
             return []
         for component in reader:
-            # Check if row is valid
-            print(f"{component=}")
             # The requirement is that the component designator is "SP[0-9]+"
             if component["Ref"].startswith("SP") and component["Ref"][2:].isdigit() :
                 number = int(component["Ref"][2:])
