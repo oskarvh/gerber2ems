@@ -260,16 +260,23 @@ def get_ports_from_file(filename: str) -> List[Tuple[int, Tuple[float, float], f
     """Parse pnp CSV file and return all ports in format (number, (x, y), direction)."""
     ports: List[Tuple[int, Tuple[float, float], float]] = []
     with open(filename, "r", encoding="utf-8") as csvfile:
-        reader = csv.reader(csvfile, delimiter=",", quotechar='"')
-        next(reader, None)  # skip the headers
-        for row in reader:
-            if "Simulation_Port" in row[2]:
-                number = int(row[0][2:])
+        reader = csv.DictReader(csvfile, delimiter=",", quotechar='"')
+        # Check that the field names are as expected:
+        expected_fields = ["Ref", "Val", "Package", "PosX", "PosY", "Rot"]
+        if not set(expected_fields).issubset(reader.fieldnames):
+            logger.error(f"Unexpected fields in the position csv file. Expected {expected_fields}, got {reader.fieldnames}") 
+            return []
+        for component in reader:
+            # Check if row is valid
+            print(f"{component=}")
+            # The requirement is that the component designator is "SP[0-9]+"
+            if component["Ref"].startswith("SP") and component["Ref"][2:].isdigit() :
+                number = int(component["Ref"][2:])
                 ports.append(
                     (
                         number - 1,
-                        (float(row[3]) / 1000 / UNIT, float(row[4]) / 1000 / UNIT),
-                        float(row[5]),
+                        (float(component["PosX"]) / 1000 / UNIT, float(component["PosY"]) / 1000 / UNIT),
+                        float(component["Rot"]),
                     )
                 )
                 logging.debug("Found port #%i position in pos file", number)
